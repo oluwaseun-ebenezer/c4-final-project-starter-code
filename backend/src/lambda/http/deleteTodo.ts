@@ -1,32 +1,25 @@
 import 'source-map-support/register'
-
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
-
-import { deleteTodo } from '../../helpers/todos'
-import { getUserId } from '../utils'
+import { deletesuccess, failure, getUserId } from '../utils'
+import { deleteTodo } from '../../businessLogic/todos'
 import { createLogger } from '../../utils/logger'
 
-const logger = createLogger('Event')
+const logger = createLogger('createTodo')
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    logger.info('Processing event: ', { event })
+    try {
+      logger.info('deleting TODO item', { event })
 
-    const todoId = event.pathParameters.todoId
+      const userId = getUserId(event)
+      const todoId = event.pathParameters.todoId
 
-    const deletedItem = await deleteTodo(todoId, getUserId(event))
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true
-      },
-      body: JSON.stringify({
-        deletedItem
-      })
+      const item = await deleteTodo(userId, todoId)
+      return deletesuccess({ item })
+    } catch (error) {
+      return failure(error, error.code)
     }
   }
 )

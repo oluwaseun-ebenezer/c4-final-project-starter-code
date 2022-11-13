@@ -1,5 +1,8 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
-import { parseUserId } from "../auth/utils";
+import { APIGatewayProxyEvent } from 'aws-lambda'
+import { parseUserId } from '../auth/utils'
+import { createLogger } from '../utils/logger'
+
+const logger = createLogger('RESPONSE')
 
 /**
  * Get a user id from an API Gateway event
@@ -13,4 +16,35 @@ export function getUserId(event: APIGatewayProxyEvent): string {
   const jwtToken = split[1]
 
   return parseUserId(jwtToken)
+}
+
+export function success(body: any) {
+  logger.info('Success response', buildResponse(200, body))
+  return buildResponse(200, body)
+}
+
+export function createsuccess(body: any) {
+  logger.info('Create success response', buildResponse(201, body))
+  return buildResponse(201, body)
+}
+
+export function deletesuccess(body: any) {
+  logger.info('Delete success response', buildResponse(204, body))
+  return buildResponse(204, body)
+}
+
+export function failure(body: any, statusCode?: number) {
+  logger.info('Failure response', buildResponse(500, body))
+  return buildResponse(statusCode ?? 500, body)
+}
+
+function buildResponse(statusCode: number, body: any) {
+  return {
+    statusCode: statusCode,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true
+    },
+    body: JSON.stringify(body)
+  }
 }
